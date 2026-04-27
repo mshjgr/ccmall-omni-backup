@@ -1,0 +1,4 @@
+# .github/workflows/deploy.yml
+
+# 참고 예시는 testvm1에 있습니다
+# /root/fastapi/app01/.github/workflows/deploy.yml 참고할 것.
