@@ -57,3 +57,4 @@ def get_member_detail(member_id: str, db: Session = Depends(get_db)):
     if not customer:
         raise HTTPException(status_code=404, detail="해당 고객을 찾을 수 없습니다.")
     return customer
+#test

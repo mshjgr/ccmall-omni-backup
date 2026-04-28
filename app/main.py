@@ -19,6 +19,7 @@ app.include_router(orders.router, prefix="/orders")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 메인 주소(/)로 접속했을 때 index.html을 직접 던져주기
+# app/main.py
 @app.get("/")
-def read_index():
-    return FileResponse('static/index.html')
+async def read_index():
+    return FileResponse("static/index.html") # 메인 메뉴(와이어프레임 중앙)
