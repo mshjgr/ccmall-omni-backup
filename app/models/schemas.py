@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey ,Date
 from ..core.database import Base # database.py에서 정의한 Base를 가져옵니다.
 
 # [DB Model] inventorys 테이블 매칭
-class Inventory(Base):
+class inventorys(Base):
     __tablename__ = "inventorys"
 
     item_id = Column(Integer, primary_key=True, index=True)
@@ -11,7 +11,7 @@ class Inventory(Base):
     quantity = Column(Integer)
 
 # [DB Model] orders 테이블 매칭
-class Order(Base):
+class orders(Base):
     __tablename__ = "orders"
 
     order_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
