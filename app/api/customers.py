@@ -1,4 +1,4 @@
-﻿# [API Routes] 클라이언트 요청 URL을 정의하고 비즈니스 로직으로 연결하는 관문
+
 import os
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import create_engine, Column, String, Date
@@ -51,10 +51,10 @@ def get_customer_list(db: Session = Depends(get_db)):
 
 
 
-@app.get("/api/customers/{member_id}")
+
+@app.get("/api/customers/{member_id}") ### 컬럼별 검색기능 추가예정
 def get_member_detail(member_id: str, db: Session = Depends(get_db)):
     customer = db.query(Customer).filter(Customer.ID == member_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="해당 고객을 찾을 수 없습니다.")
     return customer
-#test
