@@ -2,7 +2,6 @@
 from os import name
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Date
 from ..core.database import Base # database.py에서 정의한 Base를 가져옵니다.
-
 # [DB Model] inventorys 테이블 매칭
 class Inventory(Base):
     __tablename__ = "inventorys"
@@ -30,3 +29,10 @@ class Customer(Base):
     address = Column(String(50), nullable=False)
     email = Column(String(100), nullable=False)
     phone_number = Column(String(20), nullable=False)
+
+class Admin(Base):
+    __tablename__ = "admins"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
