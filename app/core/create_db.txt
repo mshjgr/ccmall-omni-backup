@@ -34,3 +34,14 @@ CREATE TABLE orders (
 -- 6. 권한 부여 (사용자가 테이블을 다룰 수 있게)
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ccmall_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ccmall_user;
+
+
+7.관리자 계정db 생성
+CREATE TABLE admins (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+-- 로그인 테스트를 위한 계정 추가
+INSERT INTO admins (username, password) VALUES ('admin', 'password');
