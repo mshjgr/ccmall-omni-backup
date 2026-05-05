@@ -16,7 +16,8 @@ class Order(Base):
 
     order_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     item_id = Column(Integer, ForeignKey("inventorys.item_id"))
-    customer_id = Column(String)
+    customer_id = Column(String(50), ForeignKey("customers.id"))
+    order_quantity = Column(Integer, nullable=False, default=1)
     order_time = Column(DateTime)
     
 class Customer(Base):

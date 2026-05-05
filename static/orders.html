@@ -81,7 +81,7 @@
             <div style="display: flex; gap: 15px; margin-top: 25px;">
                 <a href="/orders/" class="btn-outline" style="flex: 1; text-align: center;">목록으로</a>
                 <form action="/orders/delete/{{ order.order_id }}" method="post" style="flex: 1;">
-                    <button type="submit" class="btn" style="width: 100%; background: #ff6b6b;" onclick="return confirm('주문을 취소하고 재고를 복구할까요?')">주문 취소</button>
+                    <button type="submit" class="btn" style="width: 100%; background: #ff6b6b;" onclick="return confirm('주문을 취소하겠습니까?')">주문 취소</button>
                 </form>
             </div>
         {% endif %}
