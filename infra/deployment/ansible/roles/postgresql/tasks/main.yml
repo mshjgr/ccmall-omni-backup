@@ -12,30 +12,30 @@
     msg: "지원되지 않는 아키텍처입니다. 현재 아키텍처 {{ ansible_architecture }}"
   when: ansible_architecture not in ['x86_64', 'aarch64', 'arm64']
 
-# Amazon Linux에선 기본 레포에 PostgreSQL15 패키지가 있으나,
-# 안정성을 고려해 Onprem과 같이 repo Url을 연결해 설치하는 것으로 설계함.
+- name: 3~5. Rocky 계열에서만 PGDG 저장소 설정
+  block:
+    - name: PGDG 아키텍처 설정
+      set_fact:
+        pgdg_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64' }}"
 
-- name: 3-1. PGDG 아키텍처 설정
-  set_fact:
-    pgdg_arch: "{{ 'x86_64' if ansible_architecture == 'x86_64' else 'aarch64'}}"
+    - name: PGDG repo URL 설정
+      set_fact:
+        pgdg_repo_url: >-
+          https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-{{
+          pgdg_arch }}/pgdg-redhat-repo-latest.noarch.rpm
 
-- name: 3-2. PGDG repo URL 설정
-  set_fact:
-    pgdg_repo_url: >-
-      https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-{{
-      pgdg_arch }}/pgdg-redhat-repo-latest.noarch.rpm
+    - name: PGDG 저장소 설치
+      dnf:
+        name: "{{ pgdg_repo_url }}"
+        state: present
+        disable_gpg_check: true
 
-- name: 4. PGDG 저장소 설치
-  dnf:
-    name: "{{ pgdg_repo_url }}"
-    state: present
-    disable_gpg_check: true
-
-- name: 5. 기본 PostgreSQL 모듈 비활성화
-  command: dnf -qy module disable postgresql
-  register: disable_module_result
-  changed_when: "'Nothing to do' not in disable_module_result.stdout"
-  failed_when: disable_module_result.rc != 0
+    - name: 기본 PostgreSQL 모듈 비활성화
+      command: dnf -qy module disable postgresql
+      register: disable_module_result
+      changed_when: "'Nothing to do' not in disable_module_result.stdout"
+      failed_when: disable_module_result.rc != 0
+  when: ansible_distribution in ["Rocky", "AlmaLinux", "RedHat"]
 
 - name: 6. PostgreSQL 15 패키지 설치
   dnf:
@@ -44,10 +44,17 @@
       - "{{ db_pkg }}"
     state: present
 
-- name: 7. PostgreSQL 초기화
+- name: 7-1. PostgreSQL 초기화 - Rocky/PGDG
   command: "/usr/pgsql-15/bin/postgresql-15-setup initdb"
   args:
     creates: "{{ db_dir }}/PG_VERSION"
+  when: ansible_distribution in ["Rocky", "AlmaLinux", "RedHat"]
+
+- name: 7-2. PostgreSQL 초기화 - Amazon Linux
+  command: "postgresql-setup --initdb"
+  args:
+    creates: "{{ db_dir }}/PG_VERSION"
+  when: ansible_distribution == "Amazon"
 
 - name: 8. PostgreSQL 서비스 시작 및 자동 시작 설정
   service:
@@ -114,4 +121,3 @@
   command: >
     psql -d {{ db_name }} -c "SELECT current_database();"
   changed_when: false
-
