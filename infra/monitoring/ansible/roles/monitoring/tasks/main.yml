@@ -119,10 +119,29 @@
     mode: '0755'
     remote_src: yes
 
-- name: Alertmanager 설정 디렉터리 생성
+- name: Alertmanager 데이터 디렉터리 생성
   file:
-    path: /etc/alertmanager
+    path: /var/lib/alertmanager
     state: directory
+    owner: prometheus
+    group: prometheus
+
+- name: Alertmanager 기본 설정 파일 생성
+  copy:
+    dest: /etc/alertmanager/alertmanager.yml
+    owner: prometheus
+    group: prometheus
+    mode: '0644'
+    content: |
+      route:
+        group_by: ['alertname']
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 1h
+        receiver: 'default'
+      receivers:
+        - name: 'default'
+          webhook_configs: []
 
 - name: Alertmanager 서비스 파일 등록
   copy:
@@ -134,10 +153,12 @@
       [Service]
       User=prometheus
       ExecStart=/usr/local/bin/alertmanager \
-        --config.file=/etc/alertmanager/alertmanager.yml
+        --config.file=/etc/alertmanager/alertmanager.yml \
+        --storage.path=/var/lib/alertmanager
       Restart=always
       [Install]
       WantedBy=multi-user.target
+
 
 - name: Prometheus 서비스 시작
   systemd:
