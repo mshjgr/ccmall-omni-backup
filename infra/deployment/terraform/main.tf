@@ -535,3 +535,41 @@ resource "local_file" "ansible_cfg" {
     interpreter_python = auto_silent
   EOF
 }
+
+# =============================================
+# Terraform → Ansible 모니터링 자동실행
+# EC2 생성 + inventory + ansible.cfg 준비 후 실행
+# =============================================
+resource "terraform_data" "run_monitoring_playbook" {
+
+  depends_on = [
+    aws_instance.ec2_web,         # Web 서버 생성 완료 후
+    aws_instance.ec2_rec,         # Rec 서버 생성 완료 후
+    local_file.ansible_inventory, # inventory.yml 생성 완료 후
+    local_file.ansible_cfg        # ansible.cfg 생성 완료 후
+  ]
+
+  provisioner "local-exec" {
+    # ansible.cfg 가 있는 infra/ 폴더에서 실행
+    working_dir = local.infra_dir
+
+    command = <<-EOT
+      echo "======================================"
+      echo " EC2 SSH 준비 대기 중... (60초)"
+      echo "======================================"
+      sleep 60
+
+      echo "======================================"
+      echo " Ansible 모니터링 Playbook 시작!"
+      echo "======================================"
+      ANSIBLE_CONFIG=${local.ansible_cfg} \
+      ansible-playbook monitoring/playbook.yml \
+        --private-key ${local.ssh_key_file} \
+        -v
+
+      echo "======================================"
+      echo " Playbook 완료!"
+      echo "======================================"
+    EOT
+  }
+}
