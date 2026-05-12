@@ -200,7 +200,7 @@ resource "aws_security_group" "sg_rec" {
   name   = "SG-Rec"
   vpc_id = aws_vpc.ccmall_vpc.id
 
-  # EC2-Web에서 EC2-Rec으로 SSH 허용
+  # ccmall-Web에서 ccmall-Rec으로 SSH 허용
   ingress {
     from_port       = 22
     to_port         = 22
@@ -208,7 +208,7 @@ resource "aws_security_group" "sg_rec" {
     security_groups = [aws_security_group.sg_web.id]
   }
 
-  # EC2-Web에서 EC2-Rec PostgreSQL 접근 허용
+  # ccmall-Web에서 ccmall-Rec PostgreSQL 접근 허용
   ingress {
     from_port       = 5432
     to_port         = 5432
@@ -216,7 +216,7 @@ resource "aws_security_group" "sg_rec" {
     security_groups = [aws_security_group.sg_web.id]
   }
 
-  # mgmt 서버가 Tailscale 대역을 통해 EC2-Rec PostgreSQL에 접근
+  # mgmt 서버가 Tailscale 대역을 통해 ccmall-Rec PostgreSQL에 접근
   ingress {
     from_port   = 5432
     to_port     = 5432
@@ -224,7 +224,7 @@ resource "aws_security_group" "sg_rec" {
     cidr_blocks = ["172.16.8.0/24"]
   }
 
-  # mgmt Prometheus -> EC2-Rec Node Exporter
+  # mgmt Prometheus -> ccmall-Rec Node Exporter
   ingress {
     from_port   = 9100
     to_port     = 9100
@@ -232,7 +232,7 @@ resource "aws_security_group" "sg_rec" {
     cidr_blocks = ["172.16.8.0/24"]
   }
 
-  # mgmt Prometheus -> EC2-Rec PostgreSQL Exporter
+  # mgmt Prometheus -> ccmall-Rec PostgreSQL Exporter
   ingress {
     from_port   = 9187
     to_port     = 9187
@@ -358,21 +358,21 @@ resource "aws_instance" "ccmall_rec" {
   }
 }
 
-# 생성된 EC2-Web의 public ip를 출력
+# 생성된 ccmall-Web의 public ip를 출력
 output "web_public_ip" {
-  description = "EC2-Web의 public ipv4 주소"
+  description = "ccmall-Web의 public ipv4 주소"
   value       = aws_instance.ccmall_web.public_ip
 }
 
-# 생성된 EC2-Web의 private ip를 출력
+# 생성된 ccmall-Web의 private ip를 출력
 output "web_private_ip" {
-  description = "EC2-Web의 private ipv4 주소"
+  description = "ccmall-Web의 private ipv4 주소"
   value       = aws_instance.ccmall_web.private_ip
 }
 
-# 생성된 EC2-Rec의 private ip를 출력
+# 생성된 ccmall-Rec의 private ip를 출력
 output "rec_private_ip" {
-  description = "EC2-Rec의 private ipv4 주소"
+  description = "ccmall-Rec의 private ipv4 주소"
   value       = aws_instance.ccmall_rec.private_ip
 }
 
@@ -426,7 +426,7 @@ resource "terraform_data" "prepare_ansible_dirs" {
   }
 }
 # public ip와 private ip를 이용해서 infra/inventory/inventory.yml 파일 만들기
-# inventory는 EC2-Web, EC2-Rec만 단순하게 정의한다.
+# inventory는 ccmall-Web, ccmall-Rec만 단순하게 정의한다.
 # 접속 사용자와 key는 ansible.cfg 또는 실행 명령어에서 결정한다.
 resource "local_file" "ansible_inventory" {
   filename = local.inventory_file
@@ -488,11 +488,11 @@ resource "local_file" "ansible_cfg" {
 resource "terraform_data" "bootstrap_user1" {
 
   depends_on = [
-    aws_instance.ccmall_web,          # Web 서버 생성 완료 후
-    aws_instance.ccmall_rec,          # Rec 서버 생성 완료 후
-    local_file.ccmall_ssh_key,            # SSH Private Key 생성 완료 후
-    local_file.ansible_inventory,  # inventory.yml 생성 완료 후
-    local_file.ansible_cfg         # ansible.cfg 생성 완료 후
+    aws_instance.ccmall_web,      # Web 서버 생성 완료 후
+    aws_instance.ccmall_rec,      # Rec 서버 생성 완료 후
+    local_file.ccmall_ssh_key,    # SSH Private Key 생성 완료 후
+    local_file.ansible_inventory, # inventory.yml 생성 완료 후
+    local_file.ansible_cfg        # ansible.cfg 생성 완료 후
   ]
 
   triggers_replace = {
@@ -535,8 +535,8 @@ resource "terraform_data" "bootstrap_user1" {
 resource "terraform_data" "run_monitoring_playbook" {
 
   depends_on = [
-    aws_instance.ccmall_web,          # Web 서버 생성 완료 후
-    aws_instance.ccmall_rec,          # Rec 서버 생성 완료 후
+    aws_instance.ccmall_web,       # Web 서버 생성 완료 후
+    aws_instance.ccmall_rec,       # Rec 서버 생성 완료 후
     local_file.ansible_inventory,  # inventory.yml 생성 완료 후
     local_file.ansible_cfg,        # ansible.cfg 생성 완료 후
     terraform_data.bootstrap_user1 # bootstrap 완료 후
