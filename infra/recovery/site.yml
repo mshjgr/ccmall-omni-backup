@@ -1,0 +1,83 @@
+- name: "PostgreSQL 설치 및 S3 백업 복구"
+  hosts: all
+  become: true  
+
+  vars:
+    s3_bucket_name: "db-backup-storage-684b06ef"  ### 리눅스 환경변수로 s3버킷 이름 넣어서 사용해야함
+    backup_file_name: "full_db_backup.sql"
+    db_user_password: "user1" 
+    postgresql_global_config_options:
+      - option: unix_socket_directories
+        value: '/var/run/postgresql'
+      - option: log_directory
+        value: "{{ 'log' if ansible_os_family == 'RedHat' else '/var/log/postgresql' }}"
+      - option: listen_addresses
+        value: "*"
+    postgresql_hba_entries:
+      - { type: local, database: all, user: postgres, address: '', auth_method: peer }
+      - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
+      - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+      - { type: host, database: all, user: postgres, address: '0.0.0.0/0', auth_method: reject }
+      - { type: host, database: all, user: all, address: '0.0.0.0/0', auth_method: md5 }
+
+  roles:
+    - geerlingguy.postgresql
+
+  post_tasks:
+    - name: "1. DB 유저 ccmall_user 생성"
+      become_user: postgres
+      postgresql_user:
+        name: ccmall_user
+        password: "{{ db_user_password }}"
+        role_attr_flags: "SUPERUSER"
+
+    - name: "1-2. ccmall_db 데이터베이스 생성"
+      become_user: postgres
+      postgresql_db:
+        name: ccmall_db
+        owner: ccmall_user
+
+    - name: "2. S3 버킷에서 백업 파일 다운로드"
+      ansible.builtin.shell:
+        cmd: "aws s3 cp s3://{{ s3_bucket_name }}/{{ backup_file_name }} /tmp/{{ backup_file_name }}"
+      become: true
+      become_user: ec2-user
+
+    - name: "3. 백업 파일 권한 설정"
+      ansible.builtin.file:
+        path: "/tmp/{{ backup_file_name }}"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+
+    - name: "4. 데이터베이스 복구 실행 (대상 DB를 ccmall_db로 지정)"
+      ansible.builtin.shell:
+        cmd: "psql -f /tmp/{{ backup_file_name }} ccmall_db"
+      become_user: postgres
+      ignore_errors: true 
+
+    - name: "5. database.py 파일 내 DB_HOST IP 동적 수정"
+      delegate_to: localhost        
+      become: false                  
+      ansible.builtin.replace:
+        path: "../../app/core/database.py" 
+        regexp: '^DB_HOST\s*=\s*.*'
+        replace: 'DB_HOST = os.getenv("DB_HOST", "{{ inventory_hostname }}")'
+
+    - name: "6. 파일 수정 결과 확인"
+      delegate_to: localhost
+      become: false
+      ansible.builtin.shell: "grep 'DB_HOST =' ../../app/core/database.py"
+      register: updated_host
+
+    - name: "7. 변경된 IP 출력"
+      debug:
+        msg: " database.py가 다음 IP로 업데이트되었습니다: {{ updated_host.stdout }}"
+
+    - name: "8. [로컬 PC] FastAPI 서비스 재시작"
+      delegate_to: localhost
+      become: true                 
+      ansible.builtin.systemd:
+        name: ccmall_app 
+        state: restarted
+      ignore_errors: true
