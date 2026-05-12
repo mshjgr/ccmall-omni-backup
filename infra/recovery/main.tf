@@ -161,7 +161,7 @@ resource "terraform_data" "wait_for_instance" {
   }
 }
 
-# ------- ansible playbook (줄바꿈 오류 수정 버전) ---------
+# ------- ansible playbook  ---------
 resource "terraform_data" "ansible_run" {
   depends_on = [terraform_data.wait_for_instance]
 
