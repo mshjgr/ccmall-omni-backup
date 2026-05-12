@@ -6,8 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 DB_USER = os.getenv("DB_USER", "ccmall_user")
-### 임시 서버 만들고 db만든후 DB_HOST부분을 동적으로 변경하셔야합니다.
-DB_HOST = os.getenv("DB_HOST", "172.16.8.201")  
+DB_HOST = os.getenv("DB_HOST", "172.16.8.201")
 DB_PASS = os.getenv("DB_PASS", "user1")
 DB_NAME = os.getenv("DB_NAME", "ccmall_db")
 DB_PORT = os.getenv("DB_PORT", "5432")
