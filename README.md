@@ -91,3 +91,29 @@ ccmall-omni-backup/
 | **test** | 테스트 코드 추가 및 검증 | `test: 백업 스크립트 테스트 추가` |
 | **chore** | 환경 설정 및 라이브러리 관리 | `chore: 환경설정 파일 정리` |
 | **refactor** | 코드 리팩토링 | `refactor: S3 이관 로직 구조 개선` |
+
+---
+
+## 👤 5. 나의 기여 (모니터링 시스템 담당 - mshjgr)
+
+### 담당 역할
+팀 프로젝트에서 **모니터링 시스템 전체 설계 및 구현** 담당
+
+### 구현 내용
+- Prometheus / Grafana / Alertmanager Ansible Role 구조 설계
+- CPU >90%, 메모리 >90%, 디스크 >85%, 서비스 다운 등 알림 설정
+- Terraform → Ansible 모니터링 Playbook 자동 실행 연동
+- Telegram 알림 연동 및 Alertmanager 변수 처리
+- 온프레미스 DB / 예비 DB 감시 항목 추가
+
+### 트러블슈팅
+| 문제 | 원인 | 해결 |
+|------|------|------|
+| Alertmanager 실행 오류 | 스토리지 경로 미지정 | --storage.path 옵션 추가 |
+| Prometheus 설치 오류 | Rocky Linux 저장소에 없음 | 수동 설치 방식으로 변경 |
+
+### 관련 PR
+- PR #29 feat: 모니터링 Ansible Role 구조 추가
+- PR #30 fix: Prometheus 수동설치 및 hosts localhost 수정
+- PR #34 feat: Terraform→Ansible 자동실행 및 Alertmanager 보완
+- PR #43 feat: Telegram 알림 연동
